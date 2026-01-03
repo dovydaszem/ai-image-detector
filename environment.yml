@@ -1,0 +1,14 @@
+dependencies:
+  - python=3.12
+  - ipykernel
+  - ipywidgets
+  - jupyter
+  - numpy
+  - matplotlib
+  - requests
+  - diffusers
+  - transformers
+  - scipy
+  - pip
+  - pip:
+    - fiftyone
