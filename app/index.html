@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ai Image Detector</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* horizontal centering */
+            justify-content: center; /* vertical centering */
+            min-height: 100vh;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        #uploadForm {
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #preview {
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Upload an image</h2>
+
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file">
+            <input type="submit" value="predict">
+        </form>
+
+        <img id="preview" style="display:none; margin-bottom:10px;">
+        <h3 id="resultText"></h3>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const uploadForm = document.getElementById('uploadForm');
+        const resultText = document.getElementById('resultText');
+
+        fileInput.onchange = e => {
+            const [file] = e.target.files;
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block"; // show only when image exists
+                resultText.innerText = ""; 
+            }
+        };
+
+    uploadForm.onsubmit = async (e) => {
+        e.preventDefault();
+        if (!fileInput.files[0]) return;
+        
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        resultText.innerText = "Analysing...";
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                resultText.innerText = "error: " + data.error;
+                resultText.style.color = "black";
+            } else {
+                resultText.innerText = `${data.verdict}`;
+
+                if (data.is_ai) {
+                    resultText.style.color = "#c91231";
+                } else {
+                    resultText.style.color = "#12c96e";
+                }
+            }
+
+        } catch (err) {
+            resultText.innerText = "request failed";
+            resultText.style.color = "black";
+        }
+    };
+
+    </script>
+</body>
+</html>

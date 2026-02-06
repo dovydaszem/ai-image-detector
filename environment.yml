@@ -6,9 +6,14 @@ dependencies:
   - numpy
   - matplotlib
   - requests
-  - diffusers
-  - transformers
   - scipy
+  - pytorch
+  - torchvision
+  - fastapi
+  - uvicorn
+  - python-multipart
   - pip
   - pip:
-    - fiftyone
+    - torchsummary
+    - transformers
+    - diffusers
