@@ -4,10 +4,12 @@ dependencies:
   - ipykernel
   - ipywidgets
   - jupyter
+  - tqdm
   - numpy
-  - matplotlib
-  - requests
   - scipy
+  - matplotlib
+  - pandas
+  - requests
   - pytorch
   - torchvision
   - fastapi
