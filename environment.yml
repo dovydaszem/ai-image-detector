@@ -20,3 +20,4 @@ dependencies:
     - torchsummary
     - transformers
     - diffusers
+    - grad-cam
