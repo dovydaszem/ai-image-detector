@@ -1,9 +1,10 @@
 import torch
 import numpy as np
 from PIL import Image
+from pathlib import Path
 
 # Load traced model
-model = torch.jit.load("model.pt")
+model = torch.jit.load(Path(__file__).parent / "model_jit.pt")
 model.eval()
 
 def preprocess(img, dims=256):
