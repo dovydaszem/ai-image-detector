@@ -1,9 +1,10 @@
 import io
 import torch
+import numpy as np
 from PIL import Image
-from model_setup import model, preprocess
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, UploadFile, File
+from model_setup import model, preprocess, apply_gradcam
 
 app = FastAPI()
 
@@ -21,13 +22,20 @@ async def predict(file: UploadFile = File(...)):
         if not data:
             return {"error": "uploaded file is empty"}
 
-        # use the 'data' variable already in memory
+        # Use the 'data' variable already in memory
         img = Image.open(io.BytesIO(data))
-        x = preprocess(img)
+        w, h = img.size
+        img_tensor = preprocess(img)
         
         with torch.no_grad():
-            logits = model(x)
+            logits = model(img_tensor)
             prob = torch.sigmoid(logits).item()
+
+        heatmap = apply_gradcam(model, img_tensor, w, h)
+        
+        # Define a function to tell transparency of the heatmap overlay
+        def steep_sigmoid(x, k=15):
+            return 1 / (1 + np.exp(-k * (x - 0.5)))    
         
         if prob > 0.5:
             verdict = f"Likely AI generated (AI probability: {prob * 100:.0f}%)"
@@ -36,7 +44,9 @@ async def predict(file: UploadFile = File(...)):
 
         return {
             "verdict": verdict,
-            "is_ai": prob > 0.5
+            "is_ai": prob > 0.5,
+            "heatmap": heatmap,
+            "alpha": 0.5 * steep_sigmoid(prob)  # Transparency of the heatmap overlay 
         }
 
     except Exception as e:

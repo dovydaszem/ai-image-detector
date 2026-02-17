@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ai Image Detector</title>
+    <title>AI Image Detector</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+        :root {
+            --ink: #0d0f14;
+            --muted: #626468;
+            --accent: #ff6b2c;
+            --accent-2: #2cc7ff;
+            --panel: #ffffff;
+            --shadow: rgba(15, 15, 20, 0.2);
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -10,39 +21,129 @@
             flex-direction: column;
             align-items: center; /* horizontal centering */
             justify-content: center; /* vertical centering */
-            min-height: 100vh;
-            font-family: sans-serif;
-            background-color: #ffffff;
+            min-height: 100vh; /* 100vh = 100% viewport height */
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 10% 10%, #fff1e9 0%, rgba(255, 241, 233, 0) 60%),
+                radial-gradient(1000px 500px at 90% 20%, #e7f7ff 0%, rgba(231, 247, 255, 0) 60%),
+                linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
         }
 
+        /* Choose file and Predict buttons section*/
         #uploadForm {
             margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px; /* space between buttons */
+            align-items: center;
+            justify-content: center;
         }
 
+        /* Main box */
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            background: var(--panel);
+            border-radius: 15px;
+            margin: 50px;
+            padding: 30px 30px;
+            box-shadow: 0 0 40px var(--shadow);
         }
 
+        .description {
+            width: 80%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            color: var(--muted);
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        /* preview of the uploaded image */
         #preview {
             max-width: 500px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .basic-button,
+        .predict-button,
+        #uploadForm input[type="submit"] {
+            font-family: inherit;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 18px;
+            border: 2px solid var(--muted);
+            cursor: pointer;
+            background: transparent;
+            /* background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); */
+        }
+
+        /* #uploadForm input[type="file"] {
+            font-family: inherit;
+            padding: 10px 10px;
+            border-radius: 999px;
+            border:20px solid var(--ink);
+            background: transparent;
+        } */
+        
+        .basic-button {
+            background: transparent;
+            color: var(--muted);
+            border: 2px solid var(--muted);
+            text-align: left;
+            width: 200px;
+        }
+
+        .predict-button:hover {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        }
+
+        .basic-button:hover,
+        .basic-button:focus-visible {
+            background: rgba(13, 15, 20, 0.1);
         }
     </style>
+    
 </head>
 <body>
     <div class="container">
+        <h1>Interpretable AI Image Detector</h1>
+        
+        <div class="description">
+            <h3>Overview</h3>
+            <p>
+                This tool uses a custom convolutional neural network (CNN) to identify
+                synthetic patterns indicative of generative AI.
+        </p>
+            </p>
+
+            <h3>Interpretability</h3>
+            <p>
+                When an AI generated image is detected, the tool provides a heatmap overlay
+                based on Grad-CAM technology, telling which parts of a given image most
+                influence the model’s decision. Note that the heatmap may not always be
+                intuitive, giving you a glimpse into the model's decision process, which is
+                different from that of a human's.
+            </p>
+        </div>
+
         <h2>Upload an image</h2>
 
         <form id="uploadForm">
-            <input type="file" id="fileInput" name="file">
-            <input type="submit" value="predict">
+            <input type="file" id="fileInput" name="file" style="display:none;">
+            <label for="fileInput" class="basic-button" style="cursor:pointer;">Choose file</label>
+            <input type="submit" value="Predict">
         </form>
 
         <img id="preview" style="display:none; margin-bottom:10px;">
+        <div style="margin-bottom: 10px;">
+            <button id="toggleHeatmap" class="basic-button" type="button" style="display:none;">Show heatmap</button>
+        </div>
         <h3 id="resultText"></h3>
     </div>
 
@@ -51,13 +152,27 @@
         const preview = document.getElementById('preview');
         const uploadForm = document.getElementById('uploadForm');
         const resultText = document.getElementById('resultText');
+        const toggleHeatmap = document.getElementById('toggleHeatmap');
+
+        // store the original image source to reset the preview
+        let originalSrc = "";
+        let heatmapSrc = "";
+        let heatmapVisible = false;
 
         fileInput.onchange = e => {
             const [file] = e.target.files;
             if (file) {
-                preview.src = URL.createObjectURL(file);
-                preview.style.display = "block"; // show only when image exists
+                // revoke old url to prevent memory leaks
+                if (originalSrc) URL.revokeObjectURL(originalSrc);
+                
+                originalSrc = URL.createObjectURL(file);
+                preview.src = originalSrc;
+                preview.style.display = "block"; // Show only when image exists
                 resultText.innerText = ""; 
+                heatmapSrc = "";
+                heatmapVisible = false;
+                toggleHeatmap.style.display = "none";
+                toggleHeatmap.innerText = "Show heatmap";
             }
         };
 
@@ -65,9 +180,17 @@
         e.preventDefault();
         if (!fileInput.files[0]) return;
         
+        // reset preview to original before applying new heatmap
+        preview.src = originalSrc;
+        heatmapSrc = "";
+        heatmapVisible = false;
+        toggleHeatmap.style.display = "none";
+        toggleHeatmap.innerText = "Show heatmap";
+        
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
 
+        resultText.style.color = "black";
         resultText.innerText = "Analysing...";
 
         try {
@@ -86,8 +209,33 @@
 
                 if (data.is_ai) {
                     resultText.style.color = "#c91231";
+
+                    // Apply heatmap overlay
+                    const heatmap = new Image();
+                    heatmap.src = `data:image/png;base64,${data.heatmap}`;
+                    heatmap.onload = () => {
+                        // draw original image first to ensure we have a clean base
+                        const baseImg = new Image();
+                        baseImg.src = originalSrc;
+                        baseImg.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = baseImg.naturalWidth;
+                            canvas.height = baseImg.naturalHeight;
+                            const ctx = canvas.getContext('2d');
+                            
+                            ctx.drawImage(baseImg, 0, 0);
+                            ctx.globalAlpha = data.alpha;
+                            ctx.drawImage(heatmap, 0, 0, canvas.width, canvas.height);
+                            heatmapSrc = canvas.toDataURL();
+                            preview.src = heatmapSrc;
+                            heatmapVisible = true;
+                            toggleHeatmap.style.display = "inline-block";
+                            toggleHeatmap.innerText = "Hide heatmap";
+                        };
+                    };
                 } else {
                     resultText.style.color = "#12c96e";
+                    preview.src = originalSrc; // ensure it stays clean if not ai
                 }
             }
 
@@ -95,6 +243,13 @@
             resultText.innerText = "request failed";
             resultText.style.color = "black";
         }
+    };
+
+    toggleHeatmap.onclick = () => {
+        if (!heatmapSrc) return;
+        heatmapVisible = !heatmapVisible;
+        preview.src = heatmapVisible ? heatmapSrc : originalSrc;
+        toggleHeatmap.innerText = heatmapVisible ? "Hide heatmap" : "Show heatmap";
     };
 
     </script>
