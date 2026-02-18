@@ -8,8 +8,8 @@
         :root {
             --ink: #0d0f14;
             --muted: #626468;
-            --accent: #ff6b2c;
-            --accent-2: #2cc7ff;
+            --accent: #ffd4c1;
+            --accent-2: #c8f0ff;
             --panel: #ffffff;
             --shadow: rgba(15, 15, 20, 0.2);
         }
@@ -40,7 +40,7 @@
             justify-content: center;
         }
 
-        /* Main box */
+        /* main box */
         .container {
             display: flex;
             flex-direction: column;
@@ -53,10 +53,12 @@
             box-shadow: 0 0 40px var(--shadow);
         }
 
+        /* description box */
         .description {
             width: 80%;
             max-width: 800px;
             margin-bottom: 20px;
+            font-size: 16px;
             color: var(--muted);
             line-height: 1.5;
             text-align: left;
@@ -68,44 +70,69 @@
             border-radius: 8px;
         }
 
-        .basic-button,
-        .predict-button,
-        #uploadForm input[type="submit"] {
+        /* Predict and Choose file buttons */
+        .btn {
             font-family: inherit;
-            font-weight: 600;
-            letter-spacing: 0.2px;
+            font-size: 16px;
+            line-height: 1;
+            border-radius: 999px;
             border: none;
-            border-radius: 999px;
             padding: 10px 18px;
-            border: 2px solid var(--muted);
             cursor: pointer;
-            background: transparent;
-            /* background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); */
-        }
-
-        /* #uploadForm input[type="file"] {
-            font-family: inherit;
-            padding: 10px 10px;
-            border-radius: 999px;
-            border:20px solid var(--ink);
-            background: transparent;
-        } */
-        
-        .basic-button {
-            background: transparent;
-            color: var(--muted);
-            border: 2px solid var(--muted);
-            text-align: left;
-            width: 200px;
-        }
-
-        .predict-button:hover {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: 70px;
+            white-space: nowrap;
         }
 
-        .basic-button:hover,
-        .basic-button:focus-visible {
-            background: rgba(13, 15, 20, 0.1);
+        .btn:hover,
+        .btn:focus-visible {
+            background: linear-gradient(135deg, #ff9e74 0%, #73daff 100%);
+        }
+
+        /* filename inside button */
+        .btn .file-name {
+            font-size: inherit;
+            color: var(--muted);
+            margin-left: 0;
+        }
+
+        /* Heatmap button */
+        .btn-icon {
+            width: 0;
+            height: 0;
+            padding: 0;
+            border: none;
+            background: url("heatmap_icon.png") center/contain no-repeat;
+            opacity: 0;
+            transform: translateX(-21px);
+            transition: opacity 200ms ease, transform 200ms ease, width 200ms ease, height 200ms ease, filter 200ms ease;
+            pointer-events: none;
+            overflow: hidden;
+            filter: grayscale(0) opacity(0.65);
+            cursor: pointer;
+        }
+
+        .btn-icon.is-visible {
+            width: 42px;
+            height: 42px;
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .btn-icon.grayscale {
+            filter: grayscale(1) opacity(0.65);
+        }
+
+        .btn-icon:hover {
+            filter: grayscale(0) opacity(1);
+        }
+
+        .btn-icon.grayscale:hover {
+            filter: grayscale(1) opacity(1);
         }
     </style>
     
@@ -136,14 +163,16 @@
 
         <form id="uploadForm">
             <input type="file" id="fileInput" name="file" style="display:none;">
-            <label for="fileInput" class="basic-button" style="cursor:pointer;">Choose file</label>
-            <input type="submit" value="Predict">
+            <label for="fileInput" class="btn">
+                <span>Choose file</span>
+                <span id="fileName" class="file-name">None chosen</span>
+            </label>
+
+            <input type="submit" class="btn" value="Predict">
+            <button id="toggleHeatmap" class="btn-icon" type="button" aria-label="Toggle heatmap"></button>
         </form>
 
         <img id="preview" style="display:none; margin-bottom:10px;">
-        <div style="margin-bottom: 10px;">
-            <button id="toggleHeatmap" class="basic-button" type="button" style="display:none;">Show heatmap</button>
-        </div>
         <h3 id="resultText"></h3>
     </div>
 
@@ -153,11 +182,16 @@
         const uploadForm = document.getElementById('uploadForm');
         const resultText = document.getElementById('resultText');
         const toggleHeatmap = document.getElementById('toggleHeatmap');
+        const fileName = document.getElementById('fileName');
 
         // store the original image source to reset the preview
         let originalSrc = "";
         let heatmapSrc = "";
         let heatmapVisible = false;
+
+        const setHeatmapButtonVisible = (visible) => {
+            toggleHeatmap.classList.toggle('is-visible', visible);
+        };
 
         fileInput.onchange = e => {
             const [file] = e.target.files;
@@ -171,87 +205,83 @@
                 resultText.innerText = ""; 
                 heatmapSrc = "";
                 heatmapVisible = false;
-                toggleHeatmap.style.display = "none";
-                toggleHeatmap.innerText = "Show heatmap";
+                setHeatmapButtonVisible(false);
+                fileName.textContent = file.name;
+            } else {
+                fileName.textContent = "None chosen";
             }
         };
 
-    uploadForm.onsubmit = async (e) => {
-        e.preventDefault();
-        if (!fileInput.files[0]) return;
-        
-        // reset preview to original before applying new heatmap
-        preview.src = originalSrc;
-        heatmapSrc = "";
-        heatmapVisible = false;
-        toggleHeatmap.style.display = "none";
-        toggleHeatmap.innerText = "Show heatmap";
-        
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        uploadForm.onsubmit = async (e) => {
+            e.preventDefault();
+            if (!fileInput.files[0]) return;
 
-        resultText.style.color = "black";
-        resultText.innerText = "Analysing...";
+            preview.src = originalSrc;
+            heatmapSrc = "";
+            heatmapVisible = false;
+            setHeatmapButtonVisible(false);
 
-        try {
-            const response = await fetch('/predict', {
-                method: 'POST',
-                body: formData
-            });
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
 
-            const data = await response.json();
-
-            if (data.error) {
-                resultText.innerText = "error: " + data.error;
-                resultText.style.color = "black";
-            } else {
-                resultText.innerText = `${data.verdict}`;
-
-                if (data.is_ai) {
-                    resultText.style.color = "#c91231";
-
-                    // Apply heatmap overlay
-                    const heatmap = new Image();
-                    heatmap.src = `data:image/png;base64,${data.heatmap}`;
-                    heatmap.onload = () => {
-                        // draw original image first to ensure we have a clean base
-                        const baseImg = new Image();
-                        baseImg.src = originalSrc;
-                        baseImg.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = baseImg.naturalWidth;
-                            canvas.height = baseImg.naturalHeight;
-                            const ctx = canvas.getContext('2d');
-                            
-                            ctx.drawImage(baseImg, 0, 0);
-                            ctx.globalAlpha = data.alpha;
-                            ctx.drawImage(heatmap, 0, 0, canvas.width, canvas.height);
-                            heatmapSrc = canvas.toDataURL();
-                            preview.src = heatmapSrc;
-                            heatmapVisible = true;
-                            toggleHeatmap.style.display = "inline-block";
-                            toggleHeatmap.innerText = "Hide heatmap";
-                        };
-                    };
-                } else {
-                    resultText.style.color = "#12c96e";
-                    preview.src = originalSrc; // ensure it stays clean if not ai
-                }
-            }
-
-        } catch (err) {
-            resultText.innerText = "request failed";
             resultText.style.color = "black";
-        }
-    };
+            resultText.innerText = "Analysing...";
 
-    toggleHeatmap.onclick = () => {
-        if (!heatmapSrc) return;
-        heatmapVisible = !heatmapVisible;
-        preview.src = heatmapVisible ? heatmapSrc : originalSrc;
-        toggleHeatmap.innerText = heatmapVisible ? "Hide heatmap" : "Show heatmap";
-    };
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
 
+                const data = await response.json();
+
+                if (data.error) {
+                    resultText.innerText = "error: " + data.error;
+                    resultText.style.color = "black";
+                } else {
+                    resultText.innerText = `${data.verdict}`;
+
+                    if (data.is_ai) {
+                        resultText.style.color = "#c91231";
+
+                        const heatmap = new Image();
+                        heatmap.src = `data:image/png;base64,${data.heatmap}`;
+                        heatmap.onload = () => {
+                            const baseImg = new Image();
+                            baseImg.src = originalSrc;
+                            baseImg.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = baseImg.naturalWidth;
+                                canvas.height = baseImg.naturalHeight;
+                                const ctx = canvas.getContext('2d');
+
+                                ctx.drawImage(baseImg, 0, 0);
+                                ctx.globalAlpha = data.alpha;
+                                ctx.drawImage(heatmap, 0, 0, canvas.width, canvas.height);
+                                heatmapSrc = canvas.toDataURL();
+                                preview.src = heatmapSrc;
+                                heatmapVisible = true;
+                                setHeatmapButtonVisible(true);
+                            };
+                        };
+                    } else {
+                        resultText.style.color = "#12c96e";
+                        preview.src = originalSrc;
+                    }
+                }
+
+            } catch (err) {
+                resultText.innerText = "request failed";
+                resultText.style.color = "black";
+            }
+        };
+
+        toggleHeatmap.onclick = () => {
+            if (!heatmapSrc) return;
+            heatmapVisible = !heatmapVisible;
+            preview.src = heatmapVisible ? heatmapSrc : originalSrc;
+            toggleHeatmap.classList.toggle('grayscale', !heatmapVisible);
+        };
     </script>
 </body>
 </html>
