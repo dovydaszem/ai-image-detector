@@ -1,12 +1,14 @@
-# AI image detector
+# Interpretable AI image detector
 
-A minimal web app for detecting AI-generated images using a custom CNN.
+A minimal web app for detecting AI-generated images using a custom convolutional neural network (CNN).
 
-![App screenshot](app/app_screenshot.png)
+<img src="app/app_screenshot.png" alt="App screenshot" style="border-radius: 12px; width: 100%;" />
 
 ## Overview
 
-The app is a simple web interface where users can upload an image and get a predicted probability that it is AI generated. The CNN was trained on 5k images generated with SDXL Turbo and 5k real images from MS COCO dataset.
+The app is a simple web interface where users can upload an image and get a predicted probability that it is AI generated. When an AI generated image is detected, the tool provides a heatmap overlay based on Grad-CAM technology, telling which parts of a given image most influence the model’s decision.
+
+The CNN was trained on 5k images generated with SDXL Turbo and 5k real images from MS COCO dataset.
 
 ## Setup
 
