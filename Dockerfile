@@ -11,11 +11,8 @@ COPY . /app
 COPY environment.yml /app/environment.yml
 RUN conda env create -f environment.yml
 
-# make sure conda environment is activated for all subsequent commands
-SHELL ["conda", "run", "-n", "ai-image-detector", "/bin/bash", "-c"]
+# after creating environment
+ENV PATH /opt/conda/envs/ai-image-detector/bin:$PATH
 
-# expose the port the app will run on
-EXPOSE 8000
-
-# start command
-CMD ["conda", "run", "-n", "ai-image-detector", "bash", "-c", "python -m uvicorn app.app:app --host 0.0.0.0 --port $PORT"]
+# shell form CMD
+CMD uvicorn app.app:app --host 0.0.0.0 --port $PORT
