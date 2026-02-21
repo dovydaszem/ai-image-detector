@@ -18,4 +18,4 @@ SHELL ["conda", "run", "-n", "ai-image-detector", "/bin/bash", "-c"]
 EXPOSE 8000
 
 # start command
-CMD ["conda", "run", "-n", "ai-image-detector", "python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["conda", "run", "-n", "ai-image-detector", "bash", "-c", "python -m uvicorn app.app:app --host 0.0.0.0 --port $PORT"]
