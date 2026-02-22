@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
-from model_setup import model, preprocess, apply_gradcam
+from .model_setup import model, preprocess, apply_gradcam
 
 app = FastAPI()
 
