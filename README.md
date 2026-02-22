@@ -1,3 +1,15 @@
+---
+title: ai image detector
+emoji: 🖼️
+colorFrom: 0A3D62
+colorTo: 3C40C6
+sdk: gradio
+sdk_version: "3.42"
+python_version: "3.11"
+app_file: app/app.py
+pinned: false
+---
+
 # Interpretable AI image detector
 
 A minimal web app for detecting AI-generated images using a custom convolutional neural network (CNN).
