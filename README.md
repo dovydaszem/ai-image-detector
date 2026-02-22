@@ -1,8 +1,8 @@
 ---
 title: ai image detector
 emoji: 🖼️
-colorFrom: 0A3D62
-colorTo: 3C40C6
+colorFrom: red
+colorTo: indigo
 sdk: gradio
 sdk_version: "3.42"
 python_version: "3.11"
