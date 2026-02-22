@@ -4,6 +4,8 @@ channels:
   - defaults
 dependencies:
   - python=3.12
+  - mkl=2024.0
+  - mkl-include
   - ipykernel
   - ipywidgets
   - jupyter
