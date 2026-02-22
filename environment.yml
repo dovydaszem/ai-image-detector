@@ -1,4 +1,7 @@
 name: ai-image-detector
+channels:
+  - pytorch
+  - defaults
 dependencies:
   - python=3.12
   - ipykernel
