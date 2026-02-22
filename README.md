@@ -3,8 +3,8 @@ title: ai image detector
 emoji: 🖼️
 colorFrom: red
 colorTo: indigo
-sdk: gradio
-sdk_version: "3.42"
+sdk: python
+sdk_version: "3.12"
 python_version: "3.11"
 app_file: app/app.py
 pinned: false
