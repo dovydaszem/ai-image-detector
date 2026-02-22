@@ -4,8 +4,7 @@ emoji: 🖼️
 colorFrom: red
 colorTo: indigo
 sdk: python
-sdk_version: "3.12"
-python_version: "3.11"
+python_version: "3.12"
 app_file: app/app.py
 pinned: false
 ---
