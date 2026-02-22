@@ -3,8 +3,7 @@ title: ai image detector
 emoji: 🖼️
 colorFrom: red
 colorTo: indigo
-sdk: python
-python_version: "3.12"
+sdk: docker
 app_file: app/app.py
 pinned: false
 ---
