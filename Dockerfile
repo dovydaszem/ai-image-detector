@@ -15,4 +15,4 @@ RUN conda env create -f environment.yml
 ENV PATH /opt/conda/envs/ai-image-detector/bin:$PATH
 
 # shell form CMD
-CMD uvicorn app.app:app --host 0.0.0.0 --port $PORT
+CMD uvicorn app.app:app --host 0.0.0.0 --port ${PORT:-7860}
