@@ -16,7 +16,7 @@ def index():
 
 @app.get("/heatmap_icon.png")
 def serve_heatmap_icon():
-    return FileResponse("heatmap_icon.png")
+    return FileResponse(Path(__file__).resolve().parent / "heatmap_icon.png")
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
