@@ -1,18 +1,15 @@
-# use miniconda base image
+# Use miniconda base image
 FROM continuumio/miniconda3
 
-# set working directory
-WORKDIR /app
+# Set working directory
+WORKDIR /main
 
-# copy repo contents
-COPY . /app
+# Copy repo contents to the container
+COPY . /main
 
-# create a conda env from environment.yml
-COPY environment.yml /app/environment.yml
+# Create a conda env from environment.yml
 RUN conda env create -f environment.yml
 
-# after creating environment
 ENV PATH /opt/conda/envs/ai-image-detector/bin:$PATH
 
-# shell form CMD
-CMD uvicorn app.app:app --host 0.0.0.0 --port ${PORT:-7860}
+CMD uvicorn app:app --host 0.0.0.0 --port ${PORT:-7860}

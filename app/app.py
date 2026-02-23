@@ -2,6 +2,7 @@ import io
 import torch
 import numpy as np
 from PIL import Image
+from pathlib import Path
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from .model_setup import model, preprocess, apply_gradcam
@@ -10,7 +11,7 @@ app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    with open("index.html", "r") as f:
+    with open(Path(__file__).resolve().parent / "index.html", "r") as f:
         return f.read()
 
 @app.get("/heatmap_icon.png")
